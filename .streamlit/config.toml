@@ -13,4 +13,7 @@ port = 8501
 runOnSave = true
 
 [browser]
-gatherUsageStats = false 
+gatherUsageStats = false
+
+[runner]
+main_script = "dash2.py" 
