@@ -1,0 +1,29 @@
+A.	DADOS ABERTOS CVM – fonte primária de dados regulados
+
+https://dados.cvm.gov.br/
+
+i.	Informações Gerais de Ofertas Públicas – informações que podem ser úteis como valor da oferta, regime de colocação (melhores esforços/garantia firme), descrição do lastro (abrem, por exemplo, investimento de CCBs de painéis solares em FIDC da Solfácil) – anexo A.i. 
+https://dados.cvm.gov.br/dataset/oferta-distrib
+
+
+ii.	FIDC – todas as informações do informe mensal estruturado – vide anexo A.ii. – os arquivos são separados para cada tabela em CSV, então a visualização é muito ruim
+https://dados.cvm.gov.br/dataset/fidc-doc-inf_mensal
+
+
+iii.	FII – todas as informações do informe mensal e trimestral estruturado – vide anexos com início A.iii. Além disso, possuem os dados de um informe anual que não consegui encontrar em pdf para os fundos, também anexo
+https://dados.cvm.gov.br/dataset/fidc-doc-inf_mensal
+https://dados.cvm.gov.br/dataset/fii-doc-inf_trimestral
+https://dados.cvm.gov.br/dataset/fii-doc-inf_anual
+
+
+iv.	Securitizadoras – informes mensais de CRI, CRA e outros títulos securitizados (e.g. debênture financeira) – são iguais aos arquivos que, nós enquanto Sec, precisamos submeter todo mês para a CVM
+https://dados.cvm.gov.br/dataset/securit-doc-inf_mensal_cri
+https://dados.cvm.gov.br/dataset/securit-doc-inf_mensal_cra
+https://dados.cvm.gov.br/dataset/securit-doc-inf_mensal_ots
+
+
+v.	Informações gerais sobre fundos de investimento - Informações cadastrais – nome do fundo, classificação do fundo, CNPJ, gestor, administrador, etc
+https://dados.cvm.gov.br/dataset/fi-cad
+
+
+vi.	Além desses dados, possuem muitos outros dados estruturados e produtos securitizados como DFs, que não parecem super relevantes nesse momento, mas estão todas disponíveis no site
