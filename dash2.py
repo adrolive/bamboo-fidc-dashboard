@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 import numpy as np
 import os
 from PIL import Image
+from datetime import datetime, timedelta
 
 # Configuração da página
 st.set_page_config(
@@ -159,13 +160,13 @@ fidc_vii_gestora = fidc_tab_vii[fidc_tab_vii["CNPJ_FUNDO_CLASSE"].isin(cnpjs_fun
 
 # Título personalizado com a gestora selecionada
 st.markdown(f"""
-<div style='background-color: #1a472a; padding: 10px; border-radius: 5px;'>
-    <h1 style='color: white; text-align: center;'>Dashboard - {selected_asset}</h1>
+<div style='background-color: #1a472a; padding: 8px; border-radius: 5px;'>
+    <h3 style='color: white; text-align: center; margin: 0;'>Dashboard - {selected_asset}</h3>
 </div>
 """, unsafe_allow_html=True)
 
-# Criar abas para Fundos, Ofertas e FIDCs
-tab1, tab2, tab3 = st.tabs(["Fundos", "Ofertas", "FIDCs"])
+# Criar abas para Fundos, Ofertas, FIDCs e Emissões
+tab1, tab2, tab3, tab4 = st.tabs(["Fundos", "Ofertas", "FIDCs", "Emissões"])
 
 # Aba de Fundos
 with tab1:
@@ -413,6 +414,109 @@ with tab3:
             st.plotly_chart(fig_inadimplencia)
         else:
             st.info("Não há dados de inadimplência disponíveis para esta gestora.")
+
+# Aba de Emissões
+with tab4:
+    st.markdown(f"**Período de análise:** 24/03/2025 - 28/03/2025")
+    st.markdown("A variação é em relação ao volume da semana anterior.")
+    
+    # Filtrar apenas registros concedidos
+    df_emissoes = oferta_resolucao_160[
+        oferta_resolucao_160['Status_Requerimento'] == 'Registro Concedido'
+    ].copy()
+    
+    # Converter data para datetime com tratamento de diferentes formatos
+    def convert_date(date_str):
+        try:
+            # Tenta primeiro o formato ISO
+            return pd.to_datetime(date_str)
+        except:
+            try:
+                # Tenta o formato dd/mm/yyyy
+                return pd.to_datetime(date_str, format='%d/%m/%Y')
+            except:
+                # Retorna NaT (Not a Time) se nenhum formato funcionar
+                return pd.NaT
+
+    df_emissoes['Data_Registro'] = df_emissoes['Data_Registro'].apply(convert_date)
+    
+    # Definir datas fixas para a semana desejada
+    ultima_sexta = pd.to_datetime('2025-03-28')  # Sexta-feira
+    ultima_segunda = pd.to_datetime('2025-03-24')  # Segunda-feira
+    
+    sexta_anterior = ultima_sexta - timedelta(days=7)  # Sexta-feira anterior
+    segunda_anterior = ultima_segunda - timedelta(days=7)  # Segunda-feira anterior
+    
+    # Filtrar emissões por período
+    emissoes_atuais = df_emissoes[
+        (df_emissoes['Data_Registro'] >= ultima_segunda) & 
+        (df_emissoes['Data_Registro'] <= ultima_sexta)
+    ]
+    
+    emissoes_anteriores = df_emissoes[
+        (df_emissoes['Data_Registro'] >= segunda_anterior) & 
+        (df_emissoes['Data_Registro'] <= sexta_anterior)
+    ]
+    
+    # Calcular métricas
+    metricas_atuais = emissoes_atuais.groupby('Valor_Mobiliario').agg({
+        'Valor_Mobiliario': 'count',
+        'Valor_Total_Registrado': 'sum'
+    }).rename(columns={'Valor_Mobiliario': 'Emissões'})
+    
+    # Calcular métricas anteriores
+    metricas_anteriores = emissoes_anteriores.groupby('Valor_Mobiliario')['Valor_Total_Registrado'].sum()
+    
+    # Calcular variação
+    metricas_atuais['Variação'] = metricas_atuais.apply(
+        lambda row: ((row['Valor_Total_Registrado'] / metricas_anteriores.get(row.name, row['Valor_Total_Registrado'])) - 1) * 100 
+        if row.name in metricas_anteriores.index else float('nan'),
+        axis=1
+    )
+    
+    # Formatar valores
+    metricas_atuais['Volume'] = metricas_atuais['Valor_Total_Registrado'].apply(
+        lambda x: f"R$ {x/1e9:.2f}bi" if x >= 1e9 else f"R$ {x/1e6:.0f}mi"
+    )
+    
+    metricas_atuais['Variação'] = metricas_atuais['Variação'].apply(
+        lambda x: f"{x:.1f}%" if pd.notnull(x) else "N/A"
+    )
+    
+    # Criar tabela final
+    tabela_final = pd.DataFrame({
+        'Categoria': metricas_atuais.index,
+        'Emissões': metricas_atuais['Emissões'],
+        'Volume': metricas_atuais['Volume'],
+        'Variação': metricas_atuais['Variação']
+    })
+    
+    # Ordenar por número de emissões
+    tabela_final = tabela_final.sort_values('Emissões', ascending=False)
+    
+    # Exibir tabela
+    st.dataframe(
+        tabela_final,
+        hide_index=True,
+        column_config={
+            "Categoria": st.column_config.TextColumn(
+                "Categoria",
+                width="medium"
+            ),
+            "Emissões": st.column_config.NumberColumn(
+                "Emissões",
+                format="%d"
+            ),
+            "Volume": st.column_config.TextColumn(
+                "Volume",
+                width="small"
+            ),
+            "Variação": st.column_config.TextColumn(
+                "Variação",
+                width="small"
+            )
+        }
+    )
 
 st.sidebar.info("Este é um dashboard interativo para análise de fundos, ofertas e FIDCs por gestora.")
 
